@@ -8,6 +8,19 @@ Start it:
 serve.cmd
 ```
 
+On macOS / Linux you can run with Python 3.10+:
+
+```sh
+python3 server.py --host 127.0.0.1 --port 8099
+```
+
+Or make the included helper executable and run it:
+
+```sh
+chmod +x run.sh
+./run.sh
+```
+
 Open:
 
 ```text
