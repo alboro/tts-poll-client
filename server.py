@@ -6,6 +6,7 @@ import ipaddress
 import json
 import mimetypes
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -85,7 +86,16 @@ class PollClientHandler(BaseHTTPRequestHandler):
     def handle_proxy_request(self) -> None:
         try:
             payload = self.read_json_body()
+            started = time.perf_counter()
             response = proxy_request(payload, allow_remote=self.server.allow_remote)
+            elapsed_ms = (time.perf_counter() - started) * 1000.0
+            self.log_message(
+                "proxied %s %s -> %s in %.1f ms",
+                payload.get("method") or "GET",
+                payload.get("url") or "",
+                response.get("status"),
+                elapsed_ms,
+            )
             self.write_json(response, status=HTTPStatus.OK)
         except ProxyError as exc:
             self.write_json({"ok": False, "error": str(exc)}, status=exc.status)
@@ -119,7 +129,8 @@ class PollClientHandler(BaseHTTPRequestHandler):
         self.wfile.write(content)
 
     def log_message(self, format: str, *args: Any) -> None:
-        sys.stderr.write("%s - %s\n" % (self.address_string(), format % args))
+        timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        sys.stderr.write("%s %s - %s\n" % (timestamp, self.address_string(), format % args))
 
 
 class ProxyError(Exception):

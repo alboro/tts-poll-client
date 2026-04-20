@@ -135,6 +135,7 @@
         response_format: config.responseFormatInput
       });
 
+      const createStarted = performance.now();
       const envelope = await proxyRequest({
         url: createUrl,
         method: config.createMethod,
@@ -143,6 +144,7 @@
         responseType: "json",
         timeoutMs: config.requestTimeoutMs
       });
+      addLog(job, `Create response in ${formatMs(performance.now() - createStarted)}`);
       assertTargetOk(envelope, "Create request failed");
 
       const responseJson = requireJson(envelope, "Create response");
@@ -223,6 +225,7 @@
     renderJobs();
 
     try {
+      const pollStarted = performance.now();
       const envelope = await proxyRequest({
         url: job.statusUrl,
         method: config.pollMethod,
@@ -231,6 +234,7 @@
         responseType: "json",
         timeoutMs: config.requestTimeoutMs
       });
+      addLog(job, `Poll response in ${formatMs(performance.now() - pollStarted)}`);
       assertTargetOk(envelope, "Status request failed");
       const responseJson = requireJson(envelope, "Status response");
       applyStatusResponse(job, responseJson);
@@ -293,6 +297,7 @@
     addLog(job, "Fetching audio");
     renderJobs();
 
+    const audioStarted = performance.now();
     const envelope = await proxyRequest({
       url: job.audioUrl,
       method: job.config.audioMethod,
@@ -301,6 +306,7 @@
       responseType: "blob",
       timeoutMs: job.config.requestTimeoutMs
     });
+    addLog(job, `Audio response in ${formatMs(performance.now() - audioStarted)}`);
     assertTargetOk(envelope, "Audio request failed");
     if (!envelope.bodyBase64) {
       throw new Error("Audio response did not include a body");
@@ -761,6 +767,13 @@
 
   function setStatus(message) {
     els.statusLine.textContent = message;
+  }
+
+  function formatMs(value) {
+    if (value < 1000) {
+      return `${Math.round(value)} ms`;
+    }
+    return `${(value / 1000).toFixed(1)} s`;
   }
 
   function debounce(fn, waitMs) {
