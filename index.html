@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TTS Poll Client</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>TTS Poll Client</h1>
+      <p id="statusLine" class="status-line">Ready</p>
+    </div>
+    <div class="top-actions">
+      <button type="button" id="saveConfigButton">Save</button>
+      <button type="button" id="resetConfigButton">Reset</button>
+      <button type="button" id="clearJobsButton">Clear Done</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <form id="submitForm" class="workspace">
+      <section class="band">
+        <div class="section-title">
+          <h2>Target</h2>
+          <div class="preset-row">
+            <button type="button" data-preset="qwen">Qwen 8030</button>
+            <button type="button" data-preset="xtts">XTTS 8020</button>
+            <button type="button" id="healthButton">Health</button>
+          </div>
+        </div>
+        <label class="field span-2">
+          <span>Server URL</span>
+          <input id="baseUrl" type="url" spellcheck="false" autocomplete="off">
+        </label>
+      </section>
+
+      <section class="band">
+        <div class="section-title">
+          <h2>Payload</h2>
+          <button type="submit" class="primary">Submit Job</button>
+        </div>
+        <label class="field span-2">
+          <span>Text</span>
+          <textarea id="textInput" rows="7" spellcheck="true"></textarea>
+        </label>
+        <label class="field">
+          <span>Voice</span>
+          <input id="voiceInput" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Response Format</span>
+          <input id="responseFormatInput" type="text" spellcheck="false">
+        </label>
+      </section>
+
+      <section class="band">
+        <div class="section-title">
+          <h2>Create Request</h2>
+        </div>
+        <label class="field">
+          <span>Method</span>
+          <select id="createMethod">
+            <option>POST</option>
+            <option>PUT</option>
+            <option>PATCH</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Path</span>
+          <input id="createPath" type="text" spellcheck="false">
+        </label>
+        <label class="field span-2">
+          <span>Headers JSON</span>
+          <textarea id="headersJson" rows="3" spellcheck="false"></textarea>
+        </label>
+        <label class="field span-2">
+          <span>Body JSON Template</span>
+          <textarea id="bodyTemplate" rows="8" spellcheck="false"></textarea>
+        </label>
+      </section>
+
+      <section class="band">
+        <div class="section-title">
+          <h2>Polling</h2>
+        </div>
+        <label class="field">
+          <span>Poll Method</span>
+          <select id="pollMethod">
+            <option>GET</option>
+            <option>POST</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Status Path Template</span>
+          <input id="statusPathTemplate" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Audio Method</span>
+          <select id="audioMethod">
+            <option>GET</option>
+            <option>POST</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Audio Path Template</span>
+          <input id="audioPathTemplate" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Interval ms</span>
+          <input id="pollIntervalMs" type="number" min="250" step="250">
+        </label>
+        <label class="field">
+          <span>Initial Delay ms</span>
+          <input id="initialDelayMs" type="number" min="0" step="250">
+        </label>
+        <label class="field">
+          <span>Max Attempts</span>
+          <input id="maxAttempts" type="number" min="0" step="1">
+        </label>
+        <label class="field">
+          <span>Timeout ms</span>
+          <input id="requestTimeoutMs" type="number" min="1000" step="1000">
+        </label>
+      </section>
+
+      <section class="band">
+        <div class="section-title">
+          <h2>Extraction</h2>
+        </div>
+        <label class="field">
+          <span>ID Path</span>
+          <input id="idPath" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Status Path</span>
+          <input id="statusPath" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Audio Ready Path</span>
+          <input id="audioReadyPath" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Status URL Path</span>
+          <input id="statusUrlPath" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Audio URL Path</span>
+          <input id="audioUrlPath" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Success Values</span>
+          <input id="successValues" type="text" spellcheck="false">
+        </label>
+        <label class="field">
+          <span>Failure Values</span>
+          <input id="failureValues" type="text" spellcheck="false">
+        </label>
+      </section>
+    </form>
+
+    <aside class="jobs-pane">
+      <div class="section-title">
+        <h2>Jobs</h2>
+        <div class="preset-row">
+          <button type="button" id="pauseAllButton">Pause All</button>
+          <button type="button" id="resumeAllButton">Resume All</button>
+        </div>
+      </div>
+      <div id="jobList" class="job-list"></div>
+    </aside>
+  </main>
+
+  <template id="jobTemplate">
+    <article class="job-card">
+      <div class="job-head">
+        <div>
+          <h3 class="job-title"></h3>
+          <p class="job-subtitle"></p>
+        </div>
+        <span class="job-state"></span>
+      </div>
+      <div class="job-meta"></div>
+      <div class="job-actions">
+        <button type="button" data-action="pause">Pause</button>
+        <button type="button" data-action="resume">Resume</button>
+        <button type="button" data-action="stop">Stop</button>
+        <button type="button" data-action="refetch">Audio</button>
+        <button type="button" data-action="delete">Delete</button>
+      </div>
+      <div class="audio-slot"></div>
+      <pre class="job-log"></pre>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
